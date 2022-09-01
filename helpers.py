@@ -4,7 +4,7 @@
 # Author: Carlos Lacaci Moya
 # Description: Helper Clases and functions for the script
 # Date: dom 24 jul 2022 18:28:11 CEST
-# version : 1.0.1
+# version : 1.0.0
 ##############################################################################
 
 import os
