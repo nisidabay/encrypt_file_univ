@@ -54,7 +54,7 @@ class EncryptFile:
             self._key_linux()
 
     def _key_mac(self):
-        """Set the undetable flags for Mac"""
+        """Set the undeletable flags for Mac"""
 
         check_flag = f"ls -lO {self.my_private_key} | sed -n '/uchg/p' | wc -l"
         set_flag = f"chflags uchg {self.my_private_key}"
@@ -135,7 +135,7 @@ class EncryptFile:
                 encoded_file.write(encrypted_file)
 
             BeautiPanel.draw_panel("green",
-                                   f"[+] File encrypted as {_file_name}.enc",
+                                   f"[+] File encrypted as: {_file_name}.enc",
                                    borderstyle="blue")
 
     def decrypt(self, local_file: str) -> None:
@@ -157,7 +157,7 @@ class EncryptFile:
             sys.exit(1)
 
         BeautiPanel.draw_panel("green",
-                               f"[+] File decrypted as {_file_name}.dec",
+                               f"[+] File decrypted as: {_file_name}.dec",
                                borderstyle="blue")
 
         # Once the file is decrypted delete the encrypted one
