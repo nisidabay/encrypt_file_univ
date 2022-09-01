@@ -1,4 +1,4 @@
-# encrypt_file_univ
+# pyencrypter
 Encripyt/Decrypt files using Fernet
 
 
