@@ -22,7 +22,7 @@
     -c          change a key
     -m          make a new key
     -r          remove a key
-    -s 			show active key
+    -s			show active key
     -u			make a key undeletable
     --version	program version
 ```
