@@ -50,10 +50,11 @@ To delete the "fernet.key" and the "fernet.key.bak":
 
 **Requirements**
 
-cryptography==37.0.4
-docopt==0.6.2
-python-decouple==3.6
-rich==12.5.1
+- cryptography==37.0.4
+
+- docopt==0.6.2
+- python-decouple==3.6
+- rich==12.5.1
 
 
 **End note**
