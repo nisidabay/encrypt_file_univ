@@ -50,7 +50,9 @@ class EncryptFile:
         """ Make a backup copy of the key """
         if not self.script_path.joinpath("fernet.key.bak").is_file():
 
-            shutil.copy("fernet.key", "fernet.key.bak")
+            orig = self.script_path.joinpath("fernet.key")
+            dest = self.script_path.joinpath("fernet.key.bak")
+            shutil.copy(orig, dest)
             BeautiPanel.draw_panel("green",
                                    "[+] Making a backup of fernet.key.bak",
                                    borderstyle="blue")
