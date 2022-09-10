@@ -45,7 +45,7 @@
 To delete the "fernet.key" and the "fernet.key.bak":
 
 - On Linux type:`sudo chattr -i fernet*; rm fernet*`
-- On Mac type: `sudo chflags nouchg fernet\*; rm fernet*`
+- On Mac type: `sudo chflags nouchg fernet*; rm fernet*`
 
 
 **Requirements**
