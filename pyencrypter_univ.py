@@ -12,7 +12,6 @@
 # -d decrypt file
 # -e encrypt file
 # -h show help
-# -u make key undeletable
 # -V program version
 ##############################################################################
 

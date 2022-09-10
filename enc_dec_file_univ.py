@@ -4,110 +4,188 @@
 # Author: Carlos Lacaci Moya
 # Name: enc_dec_file_univ.py
 # Description: Encrypt and decrypt a file using Fernet encryption
-# Date: vie 11 mar 2022 09:07:58 CET
-# Dependencies: See below
+# Creation Date: vie 11 mar 2022 09:07:58 CET
+# Modified Date: sáb 10 sep 2022 08:38:23 CEST
+# Version: 1.1
+# Dependencies: See requirements.txt
 ##############################################################################
-import subprocess
 import sys
+import shutil
 from pathlib import Path
 from dataclasses import dataclass, field
+from decouple import config  #type: ignore
 from typing import Any
 from cryptography.fernet import Fernet, InvalidToken
-from helpers import BeautiPanel
+from helpers import BeautiPanel, RunCommand
 
 
 @dataclass
 class EncryptFile:
     """Encrypt/Decrypt file using Fernet"""
 
-    _generate_key: Any = field(default=Fernet.generate_key(), init=False)
+    process: Any = field(default=RunCommand(), init=False)
     script_path = Path(__file__).parent.absolute()
 
     def __post_init__(self) -> None:
-        """Check if the key exists and make it undeletable if not 
+        """Check if the default key exists and make it undeletable if not 
            done already"""
 
         self.my_private_key = self._check_the_key()
-        self.mk_key_undeletable()
+        self._mk_key_undeletable()
+        self._mk_backup()
 
     def _check_the_key(self) -> Path:
-        """Return or create a new Key"""
+        """Return the key or create a new Key"""
 
         if not self.script_path.joinpath("fernet.key").is_file():
-            BeautiPanel.draw_panel("yellow",
-                                   "[!] Key not found. Generating a new key")
+            BeautiPanel.draw_panel(
+                "yellow", "[!] fernet.key not found. Generating a new key")
 
             with open("fernet.key", "wb") as fk:
-                fk.write(self._generate_key)
+                fk.write(Fernet.generate_key())
 
         return self.script_path.joinpath("fernet.key")
 
-    def mk_key_undeletable(self) -> None:
+    def _mk_backup(self) -> None:
+        """ Make a backup copy of the key """
+        if not self.script_path.joinpath("fernet.key.bak").is_file():
+
+            shutil.copy("fernet.key", "fernet.key.bak")
+            BeautiPanel.draw_panel("green",
+                                   "[+] Making a backup of fernet.key.bak",
+                                   borderstyle="blue")
+
+            self._mk_key_undeletable("fernet.key.bak")
+
+    def _mk_key_undeletable(self, key: str = "") -> None:
         """Make the key undeletable if not already set"""
 
         if sys.platform == "darwin":
-            self._key_mac()
+            self._key_mac(key)
 
         elif sys.platform == "linux":
 
             # Check for the inmutable attribute
-            self._key_linux()
+            self._key_linux(key)
 
-    def _key_mac(self):
-        """Set the undeletable flags for Mac"""
+    def _key_mac(self, key: str = ""):
+        """Set the undetable flags for Mac"""
 
-        check_flag = f"ls -lO {self.my_private_key} | sed -n '/uchg/p' | wc -l"
-        set_flag = f"chflags uchg {self.my_private_key}"
+        # If not key provided is the "fernet.key"
+        if key == "":
+            check_flag = f"ls -lO {self.my_private_key} | sed -n '/uchg/p' | wc -l"
+            set_flag = f"chflags uchg {self.my_private_key}"
 
-        # check if uchg flags are set
-        process = subprocess.Popen(check_flag,
-                                   stdout=subprocess.PIPE,
-                                   universal_newlines=True,
-                                   shell=True)
-        process.wait()
-        output = process.communicate()
-        # The inmutable flag is set
-        if int(output[0]) != 1:
+        # This is the key you want to protect
+        else:
 
-            process = subprocess.Popen(set_flag,
-                                       stdout=subprocess.PIPE,
-                                       universal_newlines=True,
-                                       shell=True)
-            BeautiPanel.draw_panel("yellow",
-                                   "[!] Making the Fernet key undeletable")
+            check_flag = f"ls -lO {key} | sed -n '/uchg/p' | wc -l"
+            set_flag = f"chflags uchg {key}"
 
-    def _key_linux(self):
+        output = RunCommand.run(check_flag)
 
-        # check if the lsattr is set
-        command = f"lsattr {self.my_private_key} | sed -n '/-i/p' | wc -l"
+        # The inmutable flag is not set on the fernet.key
+        if int(output[0]) != 1 and key == "":
+            set_flag = f"chflags uchg {self.my_private_key}"
+            # BeautiPanel.draw_panel("yellow",
+            # "[!] Found unprotected Fernet key")
 
-        process = subprocess.Popen(command,
-                                   stdout=subprocess.PIPE,
-                                   universal_newlines=True,
-                                   shell=True)
-        process.wait()
-        output = process.communicate()
+            RunCommand.run(set_flag)
+            BeautiPanel.draw_panel("green",
+                                   "[+] Making the Fernet key undeletable",
+                                   borderstyle="blue")
+        # The inmutable flag is not set on the key
+        elif int(output[0]) != 1 and key != "":
+            set_flag = f"chflags uchg {key}"
+            RunCommand.run(set_flag)
+            BeautiPanel.draw_panel("green",
+                                   f"[+] Making the {[key]} undeletable",
+                                   borderstyle="blue")
 
-        # The inmutable flag is not set
-        if int(output[0]) != 1:
-            BeautiPanel.draw_panel("yellow",
-                                   "[!] Making the Fernet key undeletable")
+    def _key_linux(self, key: str = ""):
+        """Set the undeletable flags for Linux"""
+
+        # If not key provided is the "fernet.key"
+        if key == "":
+            # check if the lsattr is set
+            command = f"lsattr {self.my_private_key} | sed -n '/-i/p' | wc -l"
+        # This is the key you want to protect
+        else:
+            command = f"lsattr {key} | sed -n '/-i/p' | wc -l"
+
+        output = RunCommand.run(command)
+
+        # The inmutable flag is not set on the fernet.key
+        if int(output[0]) != 1 and key == "":
             command = f"sudo chattr +i {self.my_private_key}"
-            process = subprocess.Popen(command,
-                                       stdout=subprocess.PIPE,
-                                       universal_newlines=True,
-                                       shell=True)
+            # BeautiPanel.draw_panel("yellow",
+            # "[!] Found unprotected Fernet key")
+            RunCommand.run(command)
+            BeautiPanel.draw_panel("green",
+                                   "[+] Making the Fernet key undeletable",
+                                   borderstyle="blue")
 
-            process.wait()
+        # The inmutable flag is nor set on the key
+        elif int(output[0]) != 1 and key != "":
+            command = f"sudo chattr +i {key}"
+            RunCommand.run(command)
+            BeautiPanel.draw_panel("green",
+                                   f"[+] Making the {[key]} undeletable",
+                                   borderstyle="blue")
+
+    def change_key(self) -> None:
+        """ Change and load new key"""
+
+        self.show_active_key()
+        new_key = input("Enter new key name: ")
+
+        if not self.script_path.joinpath(new_key).is_file():
+            BeautiPanel.draw_panel("yellow", f"[!] {[new_key]} not found")
+            sys.exit(1)
+        else:
+            self._write_key_in_store(new_key)
+            BeautiPanel.draw_panel("yellow", f"[!] Active key is: {[new_key]}")
+            sys.exit(0)
+
+    def _write_key_in_store(self, key: str) -> None:
+        """ Write the key in settings.ini """
+
+        if not self.script_path.joinpath("settings.ini").is_file():
+            BeautiPanel.draw_panel("yellow", "[!] Missing [settings.ini] file")
+            sys.exit(1)
+        else:
+            with open("settings.ini", "w") as store:
+                store.write("[settings]")
+                store.write("\n")
+                store.write(f"key={key}")
+
+    def show_active_key(self) -> None:
+        """ show active key """
+
+        self.key = config('key')
+        BeautiPanel.draw_panel("yellow", f"[!] Active key is: {[self.key]}")
+        # sys.exit(0)
 
     def _load_key(self) -> Any:
-        """Read and load the key"""
+        """Read and load the Personal key"""
 
-        # key = self.script_path.joinpath("fernet.key")
+        # If the key has changed, used this one instead
+        self.key = config('key')
+
+        if not self.script_path.joinpath(f"{self.key}").is_file():
+            BeautiPanel.draw_panel(
+                "yellow",
+                f"[!] {[self.key]} does not exist. Change the key to use")
+            sys.exit(1)
+
+        path_new_key = self.script_path.joinpath(f"{self.key}")
+        self.my_private_key = path_new_key
+
         with open(self.my_private_key, "rb") as fk:
             _key = fk.read()
+            load_key = Fernet(_key)
 
-        load_key = Fernet(_key)
+        self.show_active_key()
 
         return load_key
 
@@ -123,6 +201,45 @@ class EncryptFile:
 
         return _file_path
 
+    def make_new_key(self) -> None:
+        """ Create a new key """
+
+        new_key = input("Enter new key name: ")
+
+        # Add ".key" extension to the key
+        if not new_key.endswith(".key"):
+            new_key += ".key"
+
+        # FERNET.KEY CANNOT BE CREATED MANUALLY
+        if new_key == "fernet.key" and self.script_path.joinpath(
+                new_key).is_file():
+
+            BeautiPanel.draw_panel(
+                "yellow",
+                f"[!] The {[new_key]} already exist and cannot be created manually"
+            )
+            sys.exit(1)
+
+        if not new_key.endswith(".key"):
+            new_key += ".key"
+
+        with open(new_key, "wb") as fk:
+            fk.write(Fernet.generate_key())
+            BeautiPanel.draw_panel(
+                "green",
+                f"[+] Created new key: {[new_key]}. Make it undeletable with -u",
+                borderstyle="blue")
+        sys.exit(0)
+
+    def make_key_undeletable(self) -> None:
+        new_key = input("Enter the key name you want to protect: ")
+        if not self.script_path.joinpath(new_key).is_file():
+            BeautiPanel.draw_panel("yellow", f"[!] {[new_key]} not found")
+            sys.exit(1)
+        else:
+            self._mk_key_undeletable(new_key)
+            sys.exit(0)
+
     def encrypt(self, local_file: str) -> None:
         """Encrypt the file"""
 
@@ -135,7 +252,7 @@ class EncryptFile:
                 encoded_file.write(encrypted_file)
 
             BeautiPanel.draw_panel("green",
-                                   f"[+] File encrypted as: {_file_name}.enc",
+                                   f"[+] File encrypted as {_file_name}.enc",
                                    borderstyle="blue")
 
     def decrypt(self, local_file: str) -> None:
@@ -152,13 +269,128 @@ class EncryptFile:
         except InvalidToken:
             BeautiPanel.draw_panel(
                 "yellow",
-                "[!] Decoding with wrong key. Have you changed the encryption key?"
+                "[!] Decrypting with wrong key. Have you changed the encryption key?"
             )
             sys.exit(1)
 
         BeautiPanel.draw_panel("green",
-                               f"[+] File decrypted as: {_file_name}.dec",
+                               f"[+] File decrypted as {_file_name}.dec]",
                                borderstyle="blue")
 
         # Once the file is decrypted delete the encrypted one
         Path().joinpath(f"{_file_name}.enc").unlink()
+
+    def remove_key(self) -> None:
+        """ Remove selected key"""
+
+        if sys.platform == "darwin":
+            self._rm_mac()
+
+        elif sys.platform == "linux":
+
+            # Check for the inmutable attribute
+            self._rm_linux()
+
+    def _rm_linux(self) -> None:
+        """Remove the given key"""
+
+        rm_key = input("Enter the key name to remove: ")
+        # Cannot remove the fernet.key
+        if rm_key == "fernet.key":
+            BeautiPanel.draw_panel(
+                "yellow",
+                f"[!] Removing the {[rm_key]} and its backup has to be done manually"
+            )
+            sys.exit(1)
+
+        if not self.script_path.joinpath(rm_key).is_file():
+            BeautiPanel.draw_panel("yellow", f"[!] Key {[rm_key]} not found")
+            sys.exit(1)
+
+        # check if the lsattr is set
+        command = f"lsattr {rm_key} | sed -n '/-i/p' | wc -l"
+
+        output = RunCommand.run(command)
+
+        # Is the active key?
+        self._is_key_in_store(rm_key)
+
+        # The inmutable flag is not set
+        if int(output[0]) != 1:
+            command = f"rm -f {rm_key}"
+            RunCommand.run(command)
+            BeautiPanel.draw_panel("green",
+                                   f"[+] The key {[rm_key]} has been deleted",
+                                   borderstyle="blue")
+            sys.exit(0)
+
+        # The inmutable flag is set
+        elif int(output[0]) == 1:
+            command = f"sudo chattr -i {rm_key}"
+            RunCommand.run(command)
+
+            print("Deleting the key")
+            command = f"rm -f {rm_key}"
+            RunCommand.run(command)
+            BeautiPanel.draw_panel("green",
+                                   f"[+] The key {[rm_key]} has been deleted",
+                                   borderstyle="blue")
+
+            sys.exit(0)
+
+    def _rm_mac(self) -> None:
+        """Remove the given key"""
+
+        rm_key = input("Enter the key name to remove: ")
+        # Cannot remove the fernet.key
+        if rm_key == "fernet.key":
+            BeautiPanel.draw_panel(
+                "yellow",
+                f"[!] Removing the {[rm_key]} and its backup has to be done manually"
+            )
+            sys.exit(1)
+
+        if not self.script_path.joinpath(rm_key).is_file():
+            BeautiPanel.draw_panel("yellow", f"[!] Key {[rm_key]} not found")
+            sys.exit(1)
+
+        check_flag = f"ls -lO {rm_key} | sed -n '/uchg/p' | wc -l"
+        clear_flag = f"chflags nouchg {rm_key}"
+
+        output = RunCommand.run(check_flag)
+
+        # Is the active key?
+        self._is_key_in_store(rm_key)
+
+        # The inmutable flag is not set
+        if int(output[0]) != 1:
+            command = f"rm -f {rm_key}"
+            RunCommand.run(command)
+            BeautiPanel.draw_panel("green",
+                                   f"[+] The key {[rm_key]} has been deleted")
+            sys.exit(0)
+
+        # The inmutable flag is set
+        elif int(output[0]) == 1:
+            RunCommand.run(clear_flag)
+
+            print("Deleting the key")
+            command = f"rm -f {rm_key}"
+            RunCommand.run(command)
+            BeautiPanel.draw_panel("green",
+                                   f"[+] The key {[rm_key]} has been deleted",
+                                   borderstyle="blue")
+
+            sys.exit(0)
+
+    def _is_key_in_store(self, key: str) -> bool:
+        """ Returns if the key is used as default key """
+
+        found = False
+        if config('key') == key:
+            found = True
+            BeautiPanel.draw_panel(
+                "yellow",
+                f"[!] The {[key]} is the default key. Choose a new key with -c before encrypt or decrypt"
+            )
+        return found

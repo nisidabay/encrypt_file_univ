@@ -2,12 +2,13 @@
 
 ##############################################################################
 # Author: Carlos Lacaci Moya
-# Description: Helper Clases and functions for the script
-# Date: dom 24 jul 2022 18:28:11 CEST
-# version : 1.0.0
+# Description: A bunch of Helper Clases and functions
+# Modified Date: sáb 10 sep 2022 08:38:43 CEST
+# version : 1.1
 ##############################################################################
 
 import os
+import subprocess
 import sys
 import socket
 from pathlib import Path as path
@@ -17,7 +18,22 @@ from rich.console import Console
 from rich.rule import Rule
 from rich.progress import Progress
 from PIL import Image  # type: ignore
+from typing import Any
 """Bunch of helpful utilities accross different projects"""
+
+
+class RunCommand:
+    """Execute command as a subprocess"""
+    @staticmethod
+    def run(command: Any) -> Any:
+        """Run the command"""
+        process = subprocess.Popen(command,
+                                   stdout=subprocess.PIPE,
+                                   universal_newlines=True,
+                                   shell=True)
+        process.wait()
+        output = process.communicate()
+        return output
 
 
 def abspath(file: str, dir: str = ".") -> str:
@@ -82,7 +98,6 @@ def show_image(name: str):
 
 class BeautiPanel(Panel):
     """Write a message inside a panel. Inherit from rich.panel"""
-
     @staticmethod
     def draw_panel(fontcolor: str,
                    message: str,
@@ -94,7 +109,6 @@ class BeautiPanel(Panel):
 
 class HeaderLine():
     """Write an underline title message"""
-
     @staticmethod
     def draw_line(message: str) -> None:
         console = Console()
@@ -103,7 +117,6 @@ class HeaderLine():
 
 class Rule_(Rule):
     """Writes an underline title message. Inherits from rich.rule"""
-
     @staticmethod
     def draw_rule(message: str) -> None:
         console = Console()
@@ -112,6 +125,7 @@ class Rule_(Rule):
 
 def progress_bar():
     """Fake progress bar"""
+
     with Progress() as progress:
         task = progress.add_task("[green]Syncing ...", total=10000)
 
