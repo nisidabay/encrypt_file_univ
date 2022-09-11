@@ -79,12 +79,12 @@ class EncryptFile:
 
         # IF NOT KEY PROVIDED IS THE "FERNET.KEY"
         if key == "":
+            # check if the uchg is set
             check_flag = f"ls -lO {self.my_private_key} | sed -n '/uchg/p' | wc -l"
             set_flag = f"chflags uchg {self.my_private_key}"
 
         else:
             # This is the key you want to protect
-
             # Path to the key
             self.key_path = self.script_path.joinpath(key)
 
@@ -113,12 +113,13 @@ class EncryptFile:
     def _key_linux(self, key: Optional[str] = ""):
         """Set the undeletable flags for Linux"""
 
-        # If not key provided is the "fernet.key"
+        # IF NOT KEY PROVIDED IS THE "FERNET.KEY"
         if key == "":
             # check if the lsattr is set
             command = f"lsattr {self.my_private_key} | sed -n '/-i/p' | wc -l"
-        # This is the key you want to protect
+
         else:
+            # This is the key you want to protect
             # Path to the key
             self.key_path = self.script_path.joinpath(key)
 
@@ -129,8 +130,7 @@ class EncryptFile:
         # The inmutable flag is not set on the fernet.key
         if int(output[0]) != 1 and key == "":
             command = f"sudo chattr +i {self.my_private_key}"
-            # BeautiPanel.draw_panel("yellow",
-            # "[!] Found unprotected Fernet key")
+
             RunCommand.run(command)
             BeautiPanel.draw_panel("green",
                                    "[+] Making the Fernet key undeletable",
@@ -250,6 +250,8 @@ class EncryptFile:
         sys.exit(0)
 
     def make_key_undeletable(self) -> None:
+        """ Protect the keys """
+
         new_key = input("Enter the key name you want to protect: ")
         if not self.script_path.joinpath(new_key).is_file():
             BeautiPanel.draw_panel("yellow", f"[!] {[new_key]} not found")
