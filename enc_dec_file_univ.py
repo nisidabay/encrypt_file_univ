@@ -23,7 +23,6 @@ from helpers import BeautiPanel, RunCommand
 class EncryptFile:
     """Encrypt/Decrypt file using Fernet"""
 
-    process: Any = field(default=RunCommand(), init=False)
     script_path = Path(__file__).parent.absolute()
     key_path: Any = field(init=False)
 
