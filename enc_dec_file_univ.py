@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/Library/Frameworks/Python.framework/Versions/3.10/bin/python3
 
 ##############################################################################
 # Author: Carlos Lacaci Moya
@@ -157,7 +157,6 @@ class EncryptFile:
         else:
             self._write_key_in_store(new_key)
             BeautiPanel.draw_panel("yellow", f"[!] Active key is: {[new_key]}")
-            sys.exit(0)
 
     def _write_key_in_store(self, key: str) -> None:
         """ Write the key in settings.ini """
@@ -179,7 +178,6 @@ class EncryptFile:
 
         self.key = config('key')
         BeautiPanel.draw_panel("yellow", f"[!] Active key is: {[self.key]}")
-        # sys.exit(0)
 
     def _load_key(self) -> Any:
         """Read and load the Personal key"""
@@ -247,7 +245,6 @@ class EncryptFile:
                 "green",
                 f"[+] Created new key: {[new_key]}. Make it undeletable with -u",
                 borderstyle="blue")
-        sys.exit(0)
 
     def make_key_undeletable(self) -> None:
         """ Protect the keys """
@@ -258,7 +255,6 @@ class EncryptFile:
             sys.exit(1)
         else:
             self._mk_key_undeletable(new_key)
-            sys.exit(0)
 
     def encrypt(self, local_file: str) -> None:
         """Encrypt the file"""
@@ -345,7 +341,6 @@ class EncryptFile:
             BeautiPanel.draw_panel("green",
                                    f"[+] The key {[rm_key]} has been deleted",
                                    borderstyle="blue")
-            sys.exit(0)
 
         # The inmutable flag is set
         elif int(output[0]) == 1:
@@ -358,8 +353,6 @@ class EncryptFile:
             BeautiPanel.draw_panel("green",
                                    f"[+] The key {[rm_key]} has been deleted",
                                    borderstyle="blue")
-
-            sys.exit(0)
 
     def _rm_mac(self) -> None:
         """Remove the given key"""
@@ -394,7 +387,6 @@ class EncryptFile:
             RunCommand.run(command)
             BeautiPanel.draw_panel("green",
                                    f"[+] The key {[rm_key]} has been deleted")
-            sys.exit(0)
 
         # The inmutable flag is set
         elif int(output[0]) == 1:
@@ -406,8 +398,6 @@ class EncryptFile:
             BeautiPanel.draw_panel("green",
                                    f"[+] The key {[rm_key]} has been deleted",
                                    borderstyle="blue")
-
-            sys.exit(0)
 
     def _is_key_in_store(self, key: str) -> bool:
         """ Returns if the key is used as default key """
