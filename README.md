@@ -47,7 +47,6 @@ from accidental deletion by setting them as read-only.
     ```sh
     python3 -m venv .venv
     source .venv/bin/activate
-    # On Windows, use: .venv\Scripts\activate
     ```
 
 3.  **Install the required dependencies:**
@@ -169,7 +168,7 @@ To run the test suite and verify the project's functionality, navigate to the
 project root and execute:
 
 ```sh
-python3 -m unittest test_pyencrypter.py
+python3 ./test_pyencrypter.py
 ```
 
 
