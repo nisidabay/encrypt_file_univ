@@ -68,5 +68,3 @@ if __name__ == "__main__":
     if args["-u"]:
         print("Making a key read-only")
         encrypt.make_key_readonly()
-    else:
-        print(f"Type: {Path(__file__).name} -h for help")
