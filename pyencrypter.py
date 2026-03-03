@@ -12,59 +12,62 @@
 ##############################################################################
 """
 Usage:
-    pyencrypter.py ([-e] <file> | [-d] <file> | [options])
-
-    pyencrypter.py -e file.txt (output: file.enc)
-    pyencrypter.py -d file.enc (output: file.dec)
-    pyencrypter.py -c (change a key making it the default key)
-    pyencrypter.py -m (make a new key)
-    pyencrypter.py -r (remove a key)
-    pyencrypter.py -s (show active key)
-    pyencrypter.py -u (make a key read-only)
+    pyencrypter.py -e <file> [-p]
+    pyencrypter.py -d <file> [-p]
+    pyencrypter.py ( -c | -m | -r | -s | -u )
 
 Options:
-    -e          encrypt <file>
-    -d          decrypt <file>
-    -c          change a key making it the default key
-    -m          make a new key
-    -r          remove a key
-    -s          show active key
-    -u          make a key read-only
-    --version   program version
+    -e                 Encrypt the specified file.
+    -d                 Decrypt the specified file.
+    -p, --password     Use password-based encryption/decryption.
+    -c                 Change the active key used for encryption/decryption.
+    -m                 Make a new, named encryption key.
+    -r                 Remove a key.
+    -s                 Show the currently active key.
+    -u                 Make a specific key read-only.
+    --version          Program version.
+    -h, --help         Show this help message.
 """
 from pathlib import Path
 from docopt import docopt
+from getpass import getpass
 from enc_dec_file_univ import EncryptFile
 
 if __name__ == "__main__":
-    args = docopt(__doc__, version="pyencrypter v.1.2 - 2025")
+    args = docopt(__doc__, version="pyencrypter v.2.0.0 - 2026")
     encrypt = EncryptFile()
 
-    file = args["<file>"]
+    password = None
+    if args["--password"]:
+        password = getpass("Enter password: ")
+        if not password:
+            print("Password cannot be empty.")
+            exit(1)
+
     if args["-e"]:
         print("Encrypting file")
-        encrypt.encrypt(file)
+        encrypt.encrypt(args["<file>"], password=password)
 
-    if args["-d"]:
+    elif args["-d"]:
         print("Decrypting file")
-        encrypt.decrypt(file)
+        encrypt.decrypt(args["<file>"], password=password)
 
-    if args["-c"]:
+    elif args["-c"]:
         print("Changing a key")
         encrypt.change_key()
 
-    if args["-m"]:
+    elif args["-m"]:
         print("Making a new key")
         encrypt.make_new_key()
 
-    if args["-r"]:
+    elif args["-r"]:
         print("Removing a key")
         encrypt.remove_key()
 
-    if args["-s"]:
+    elif args["-s"]:
         print("Showing active key")
         encrypt.show_active_key()
 
-    if args["-u"]:
+    elif args["-u"]:
         print("Making a key read-only")
         encrypt.make_key_readonly()
